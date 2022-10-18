@@ -160,12 +160,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Direct2DInterface.cpp" />
+    <ClCompile Include="InputImageHandler.cpp" />
+    <ClCompile Include="LayeredWindow.cpp" />
     <ClCompile Include="Robert_Program.cpp" />
+    <ClCompile Include="SpriteSheet.cpp" />
+    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CoreTypes.h" />
     <ClInclude Include="Direct2DInterface.h" />
     <ClInclude Include="IGraphicsApi2D.h" />
+    <ClInclude Include="Input.h" />
+    <ClInclude Include="InputImageHandler.h" />
+    <ClInclude Include="LayeredWindow.h" />
+    <ClInclude Include="SpriteSheet.h" />
+    <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

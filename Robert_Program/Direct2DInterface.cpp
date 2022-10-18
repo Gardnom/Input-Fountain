@@ -6,9 +6,10 @@ Direct2DInterface::Direct2DInterface() {
 }
 
 Direct2DInterface::~Direct2DInterface() {
-
+	p_RenderTarget->Release();
+	m_Factory->Release();
+	m_pWhiteBrush->Release();
 }
-
 
 
 FAILABLE_PROCEDURE Direct2DInterface::Init(HWND hWnd) {
@@ -90,6 +91,35 @@ void Direct2DInterface::DrawRectangle(glm::vec2 center, f32 width, f32 height, R
 	float top = center.y + height * 0.5;
 	float bottom = center.y - height * 0.5;
 	m_PRenderTarget->FillRectangle(D2D1::RectF(left, top, right, bottom), m_pWhiteBrush);
+}
+
+ID2D1Bitmap* Direct2DInterface::CreateBitmapFromFile()
+{
+	IWICBitmapDecoder* pDecoder = NULL;
+	//IWICImagingFactory* 
+	//HRESULT hr = 
+	
+	return NULL;
+}
+
+SpriteSheet* Direct2DInterface::CreateSpriteSheetFromFile(const wchar_t* filename)
+{
+	SpriteSheet* spriteSheet = new SpriteSheet(filename, p_RenderTarget);
+	return spriteSheet;
+}
+
+void Direct2DInterface::DrawSpriteSheet(SpriteSheet* sheet, float x, float y)
+{
+	ID2D1Bitmap* bmp = sheet->p_Bmp;
+	D2D1_SIZE_F size = bmp->GetSize();
+	p_RenderTarget->DrawBitmap(bmp, D2D1::RectF(x, y, x + size.width, y + size.height));
+
+
+	/*p_RenderTarget->DrawBitmap(bmp, 
+		D2D1::RectF(0.0f, 0.0f, bmp->GetSize().width, bmp->GetSize().height),
+		1.0f, 
+		D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR,
+		D2D1::RectF(x, y, bmp->GetSize().width + x, bmp->GetSize().height + y));*/
 }
 
 ID2D1SolidColorBrush* Direct2DInterface::CreateBrush(RGBA_COL color) {

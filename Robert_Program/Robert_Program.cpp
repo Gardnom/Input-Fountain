@@ -2,8 +2,12 @@
 #include <windows.h>
 #include <stdio.h>
 #include "Direct2DInterface.h"
+#include "LayeredWindow.h"
+#include <queue>
+#include "InputImageHandler.h"
 
 #pragma comment(lib, "d2d1")
+#pragma comment(lib, "windowscodecs.lib")
 
 bool setupDone = false;
 Direct2DInterface* pD2i = nullptr;
@@ -44,34 +48,6 @@ LRESULT CALLBACK OverlayHook(int code, WPARAM wParam, LPARAM lParam)
 	return retCode;
 }
 
-LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-	//Window* pWnd = reinterpret_cast<Window*>(GetWindowLongPtrW(hWnd, 0)); // Retrieve window pointer
-
-	switch (uMsg)
-	{
-	case WM_PAINT:
-		/*PAINTSTRUCT psPaint;
-		HDC hDc;
-		hDc = BeginPaint(hWnd, &psPaint);
-		HPEN hPen;
-		hPen = CreatePen(PS_SOLID, 1, RGB(120, 120, 120));
-		SelectObject(hDc, hPen);
-		//Draw your overlay here
-		if (!setupDone) {
-			DoSetup(hWnd);
-		}
-		MoveToEx(hDc, 0, 0, NULL);
-		LineTo(hDc, 400, 400);
-
-		//DoDraw(hWnd);
-		EndPaint(hWnd, &psPaint);
-		break;*/
-	default:
-		return DefWindowProc(hWnd, uMsg, wParam, lParam);
-	}
-
-	return 0;
-}
 
 void DoSetup(HWND hWnd) {
 	pD2i = new Direct2DInterface();
@@ -107,7 +83,7 @@ int main()
 {
     std::cout << "Hello World!\n";
 	
-	Sleep(10000);
+	Sleep(2000);
 	HWND windowHandle = GetWindowHandleFromMousePosition();
 
 	DWORD winThreadId = GetWindowThreadProcessId(windowHandle, NULL);
@@ -117,65 +93,55 @@ int main()
 
 	// Create Layered window
 	
-	WNDCLASSEX wcex;
-	ZeroMemory(&wcex, sizeof(WNDCLASSEX));
-	wcex.cbSize = sizeof(WNDCLASSEX);
-	wcex.lpszClassName = L"LayeredWindow";
-	HBRUSH backgroundBrush = (HBRUSH)GetStockObject(BLACK_BRUSH);
-	wcex.style = CS_HREDRAW | CS_VREDRAW;
-	wcex.hbrBackground = backgroundBrush;
-	wcex.lpfnWndProc = WindowProc;
-	auto ok = RegisterClassEx(&wcex);
-	if (ok == 0) {
-		printf("Failed to register class: %ld\n", GetLastError());
-	}
-	
+	LayeredWindow layeredWindow;
 
-	HWND myHandle = CreateWindowEx(WS_EX_LAYERED, L"LayeredWindow", L"My window", WS_POPUP | WS_VISIBLE, 0, 0, 800, 600, NULL, NULL, NULL, NULL);
-	if (myHandle == NULL) {
-		printf("Failed to create layered window: %ld\n", GetLastError());
-	}
-	SetLayeredWindowAttributes(myHandle, RGB(0,0,0), 255, LWA_COLORKEY);
-	ShowWindow(myHandle, SW_SHOW);
+	DoSetup(layeredWindow.GetHandle());
 
-	DoSetup(myHandle);
-
-	HDC layeredWindowDC = GetDC(myHandle);
-	Direct2DInterface* _d2i = Direct2DInterface::WithDCTarget(layeredWindowDC, myHandle);
+	HDC layeredWindowDC = GetDC(layeredWindow.GetHandle());
+	Direct2DInterface* _d2i = Direct2DInterface::WithDCTarget(layeredWindowDC, layeredWindow.GetHandle());
 
 	MSG msg;
-
-	LONG curStyle = GetWindowLong(myHandle, GWL_EXSTYLE);
-	SetWindowLong(myHandle, GWL_EXSTYLE, curStyle | WS_EX_LAYERED);
+	
+	LONG curStyle = GetWindowLong(layeredWindow.GetHandle(), GWL_EXSTYLE);
+	SetWindowLong(layeredWindow.GetHandle(), GWL_EXSTYLE, curStyle | WS_EX_LAYERED);
 
 	int drawCount = 0;
 
+	float x = 0;
+
+	InputImageHandler inputImageHandler(_d2i);
+
 	while (GetMessage(&msg, NULL, 0, 0) > 0)
 	{
+		Sleep(5);
+
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
-
-		POINT p;
-		p.x = 0;
-		p.y = 0;
-
-		ClientToScreen(windowHandle, &p);
-
-		RECT rect;
-		GetClientRect(windowHandle, &rect);
-
-		MoveWindow(myHandle, p.x, p.y, rect.right, rect.bottom, FALSE);
-		SetWindowPos(myHandle, HWND_TOPMOST, p.x, p.y, rect.right, rect.bottom, NULL);
-		//printf("Drawing\n");
+						
 		
-		InvalidateRect(myHandle, NULL, FALSE);
+		//printf("Drawing\n");
+		if (GetAsyncKeyState(VK_TAB) & (1 << 15)) {
+			//printf("Tab pressed!\n");
+			layeredWindow.MoveOntoWindow(Window::GetWindowHandleFromMousePosition());
+		}
+
+		inputImageHandler.CaptureInputs();
+
+
+		InvalidateRect(layeredWindow.GetHandle(), NULL, FALSE);
 		_d2i->BeginDraw();
+		_d2i->ClearScreen(RGBA_COL(0, 0, 0, 1.0f));
 		//target->FillEllipse(D2D1::Ellipse(D2D1::Point2F(200, 200), 100, 100), whiteBrush);
-		_d2i->DrawCircle(glm::vec2(200, 200), 100, RGBA_COL(120, 120, 120, 1.0f));
+		_d2i->DrawCircle(glm::vec2(x, 200), 100, RGBA_COL(120, 120, 120, 1.0f));
+		//_d2i->DrawSpriteSheet(image, 600, 400);
+
+		inputImageHandler.DrawInputs();
+		
 		_d2i->EndDraw();
 
-		printf("Draw count: %d\n", drawCount);
+		//printf("Draw count: %d\n", drawCount);
 		//DoDraw(myHandle);
+		x += 0.01;
 	}
 
 }
