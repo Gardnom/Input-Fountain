@@ -1,0 +1,10 @@
+Debug
+Release
+*.obj
+*.pdb
+*.idb
+*.log
+Robert_Program/Debug
+Robert_Program/Release
+.vs
+Robert_Program/Include/glm/doc
