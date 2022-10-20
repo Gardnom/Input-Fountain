@@ -24,7 +24,7 @@ public:
 	ID2D1Bitmap* CreateBitmapFromFile();
 
 	SpriteSheet* CreateSpriteSheetFromFile(const wchar_t* filename);
-	void DrawSpriteSheet(SpriteSheet* sheet, float x, float y);
+	void DrawSpriteSheet(SpriteSheet* sheet, float x, float y, float alpha = 1.0f);
 
 private:
 	ID2D1Factory* m_Factory;

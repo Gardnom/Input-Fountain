@@ -10,6 +10,8 @@ HWND Window::GetWindowHandleFromMousePosition()
 
 }
 
+
+
 const HWND Window::GetHandle()
 {
 	return m_Handle;

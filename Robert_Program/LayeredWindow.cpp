@@ -37,6 +37,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	return 0;
 }
 
+
 LayeredWindow::LayeredWindow()
 {
 	ZeroMemory(&m_Wcex, sizeof(WNDCLASSEX));
@@ -64,6 +65,8 @@ LayeredWindow::LayeredWindow()
 	// Color here sets the color which should be made transparent
 	SetLayeredWindowAttributes(m_Handle, RGB(0, 0, 0), 255, LWA_COLORKEY);
 	ShowWindow(m_Handle, SW_SHOW);
+	
+	
 
 }
 

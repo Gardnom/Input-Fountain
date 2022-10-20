@@ -108,11 +108,11 @@ SpriteSheet* Direct2DInterface::CreateSpriteSheetFromFile(const wchar_t* filenam
 	return spriteSheet;
 }
 
-void Direct2DInterface::DrawSpriteSheet(SpriteSheet* sheet, float x, float y)
+void Direct2DInterface::DrawSpriteSheet(SpriteSheet* sheet, float x, float y, float alpha)
 {
 	ID2D1Bitmap* bmp = sheet->p_Bmp;
 	D2D1_SIZE_F size = bmp->GetSize();
-	p_RenderTarget->DrawBitmap(bmp, D2D1::RectF(x, y, x + size.width, y + size.height));
+	p_RenderTarget->DrawBitmap(bmp, D2D1::RectF(x, y, x + size.width, y + size.height), alpha);
 
 
 	/*p_RenderTarget->DrawBitmap(bmp, 

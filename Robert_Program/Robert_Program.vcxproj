@@ -161,6 +161,7 @@
   <ItemGroup>
     <ClCompile Include="Direct2DInterface.cpp" />
     <ClCompile Include="InputImageHandler.cpp" />
+    <ClCompile Include="InputImagePositionHandler.cpp" />
     <ClCompile Include="LayeredWindow.cpp" />
     <ClCompile Include="Robert_Program.cpp" />
     <ClCompile Include="SpriteSheet.cpp" />
@@ -172,6 +173,7 @@
     <ClInclude Include="IGraphicsApi2D.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputImageHandler.h" />
+    <ClInclude Include="InputImagePositionHandler.h" />
     <ClInclude Include="LayeredWindow.h" />
     <ClInclude Include="SpriteSheet.h" />
     <ClInclude Include="Window.h" />

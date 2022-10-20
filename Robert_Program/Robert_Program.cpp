@@ -5,6 +5,7 @@
 #include "LayeredWindow.h"
 #include <queue>
 #include "InputImageHandler.h"
+#include "InputImagePositionHandler.h"
 
 #pragma comment(lib, "d2d1")
 #pragma comment(lib, "windowscodecs.lib")
@@ -78,6 +79,27 @@ HWND GetWindowHandleFromMousePosition() {
 	
 }
 
+bool spaceWasPressed;
+bool nextWasPressed;
+bool prevWasPressed;
+
+LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam, LPARAM lParam) {
+
+	KBDLLHOOKSTRUCT* s = reinterpret_cast<KBDLLHOOKSTRUCT*>(lParam);
+
+	switch (wParam) {
+		case WM_KEYDOWN:
+			if (s->vkCode == VK_UP) 
+				printf("Up was pressed!");
+			if (s->vkCode == VK_RIGHT)
+				nextWasPressed = true;
+			if (s->vkCode == VK_LEFT)
+				prevWasPressed = true;
+	}
+
+	return CallNextHookEx(NULL, code, wParam, lParam);
+}
+
 
 int main()
 {
@@ -110,6 +132,10 @@ int main()
 	float x = 0;
 
 	InputImageHandler inputImageHandler(_d2i);
+	InputImagePositionHandler inputImagePositionHandler(&inputImageHandler);
+	bool changingDesiredPositions = true;
+
+	SetWindowsHookEx(WH_KEYBOARD_LL, &KeyboardProc, 0, 0);
 
 	while (GetMessage(&msg, NULL, 0, 0) > 0)
 	{
@@ -124,18 +150,34 @@ int main()
 			//printf("Tab pressed!\n");
 			layeredWindow.MoveOntoWindow(Window::GetWindowHandleFromMousePosition());
 		}
-
+		
+			
 		inputImageHandler.CaptureInputs();
 
 
 		InvalidateRect(layeredWindow.GetHandle(), NULL, FALSE);
 		_d2i->BeginDraw();
 		_d2i->ClearScreen(RGBA_COL(0, 0, 0, 1.0f));
-		//target->FillEllipse(D2D1::Ellipse(D2D1::Point2F(200, 200), 100, 100), whiteBrush);
 		_d2i->DrawCircle(glm::vec2(x, 200), 100, RGBA_COL(120, 120, 120, 1.0f));
-		//_d2i->DrawSpriteSheet(image, 600, 400);
 
-		inputImageHandler.DrawInputs();
+
+		if (changingDesiredPositions) {
+			if (nextWasPressed) {
+				inputImagePositionHandler.NextInput();
+				nextWasPressed = false;
+			}
+			if (prevWasPressed) {
+				inputImagePositionHandler.PreviousInput();
+				prevWasPressed = false;
+			}
+
+			inputImagePositionHandler.Update();
+			inputImagePositionHandler.Draw();
+		}
+		else {
+			inputImageHandler.DisplayAllInputs();
+		}
+		//inputImageHandler.DrawInputs();
 		
 		_d2i->EndDraw();
 

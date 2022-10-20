@@ -9,6 +9,8 @@ typedef std::tuple<bool, std::string> FAILABLE_PROCEDURE;
 typedef float f32;
 typedef double f64;
 
+typedef unsigned int u32;
+
 typedef glm::vec3 Point3D;
 
 typedef struct {
@@ -16,6 +18,8 @@ typedef struct {
 } Point2D;
 
 typedef glm::vec4 RGBA_COL;
+
+
 
 /*typedef struct {
 	float r, g, b, a;
