@@ -1,5 +1,6 @@
 #pragma once
 #include <d2d1.h>
+#include <dwrite.h>
 #include "IGraphicsApi2D.h"
 #include "glm/glm.hpp"
 #include <wincodec.h>
@@ -26,6 +27,8 @@ public:
 	SpriteSheet* CreateSpriteSheetFromFile(const wchar_t* filename);
 	void DrawSpriteSheet(SpriteSheet* sheet, float x, float y, float alpha = 1.0f);
 
+	void DrawTextToScreen(WCHAR* text);
+
 private:
 	ID2D1Factory* m_Factory;
 	ID2D1HwndRenderTarget* m_PRenderTarget;
@@ -33,4 +36,12 @@ private:
 	ID2D1RenderTarget* p_RenderTarget;
 
 	ID2D1DCRenderTarget* p_DCRenderTarget;
+
+	
+	// Text
+	IDWriteFactory* p_DWriteFactory;
+	IDWriteTextFormat* p_DTextFormat;
+
+
+
 };

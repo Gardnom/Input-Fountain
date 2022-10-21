@@ -36,6 +36,9 @@ FAILABLE_PROCEDURE Direct2DInterface::Init(HWND hWnd) {
 
 Direct2DInterface* Direct2DInterface::WithDCTarget(HDC hDC, HWND hWnd)
 {
+	static const WCHAR fontName[] = L"Verdana";
+	static const FLOAT fontSize = 50;
+
 	Direct2DInterface* d2i = new Direct2DInterface;
 	const D2D1_PIXEL_FORMAT format =
 		D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,
@@ -49,14 +52,43 @@ Direct2DInterface* Direct2DInterface::WithDCTarget(HDC hDC, HWND hWnd)
 	ID2D1DCRenderTarget* t = (ID2D1DCRenderTarget*)malloc(sizeof(ID2D1DCRenderTarget*));
 
 	HRESULT res = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &d2i->m_Factory);
-	d2i->m_Factory->CreateDCRenderTarget(&properties, &t);
+	if (!SUCCEEDED(res)) {
+	
+	}
+	res = d2i->m_Factory->CreateDCRenderTarget(&properties, &t);
+	if (!SUCCEEDED(res)) {
+	
+	}
 	d2i->p_RenderTarget = t;
 
 	RECT rect;
 	GetClientRect(hWnd, &rect);
 	((ID2D1DCRenderTarget*)d2i->p_RenderTarget)->BindDC(hDC, &rect);
 	ID2D1SolidColorBrush* whiteBrush;
-	d2i->p_RenderTarget->CreateSolidColorBrush(D2D1::ColorF(255, 255, 255, 1.0), &d2i->m_pWhiteBrush);
+	res = d2i->p_RenderTarget->CreateSolidColorBrush(D2D1::ColorF(255, 255, 255, 1.0), &d2i->m_pWhiteBrush);
+	
+	if (!SUCCEEDED(res)) {
+	
+	}
+
+	res = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(p_DWriteFactory), reinterpret_cast<IUnknown**>(&d2i->p_DWriteFactory));
+
+	if (!SUCCEEDED(res)) {
+		// Handle error
+	}
+	
+	res = d2i->p_DWriteFactory->CreateTextFormat(
+		fontName,
+		NULL,
+		DWRITE_FONT_WEIGHT_NORMAL,
+		DWRITE_FONT_STYLE_NORMAL,
+		DWRITE_FONT_STRETCH_NORMAL,
+		fontSize,
+		L"",
+		&d2i->p_DTextFormat);
+
+	//d2i->p_DTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+	//d2i->p_DTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 
 	return d2i;
 }
@@ -120,6 +152,20 @@ void Direct2DInterface::DrawSpriteSheet(SpriteSheet* sheet, float x, float y, fl
 		1.0f, 
 		D2D1_BITMAP_INTERPOLATION_MODE::D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR,
 		D2D1::RectF(x, y, bmp->GetSize().width + x, bmp->GetSize().height + y));*/
+}
+
+void Direct2DInterface::DrawTextToScreen(WCHAR * text)
+{
+	static const WCHAR helloWorld[] = L"Hello World";
+	D2D1_SIZE_F renderTargetSize = p_RenderTarget->GetSize();
+
+	p_RenderTarget->DrawText(
+		text,
+		wcslen(text),
+		p_DTextFormat,
+		D2D1::RectF(0, 0, renderTargetSize.width, renderTargetSize.height),
+		m_pWhiteBrush
+	);
 }
 
 ID2D1SolidColorBrush* Direct2DInterface::CreateBrush(RGBA_COL color) {

@@ -9,6 +9,7 @@
 
 #pragma comment(lib, "d2d1")
 #pragma comment(lib, "windowscodecs.lib")
+#pragma comment(lib, "Dwrite")
 
 bool setupDone = false;
 Direct2DInterface* pD2i = nullptr;
@@ -83,6 +84,8 @@ bool spaceWasPressed;
 bool nextWasPressed;
 bool prevWasPressed;
 
+bool changingDesiredPositions = true;
+
 LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam, LPARAM lParam) {
 
 	KBDLLHOOKSTRUCT* s = reinterpret_cast<KBDLLHOOKSTRUCT*>(lParam);
@@ -95,6 +98,8 @@ LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam, LPARAM lParam) {
 				nextWasPressed = true;
 			if (s->vkCode == VK_LEFT)
 				prevWasPressed = true;
+			if (s->vkCode == VK_CAPITAL)
+				changingDesiredPositions = !changingDesiredPositions;
 	}
 
 	return CallNextHookEx(NULL, code, wParam, lParam);
@@ -133,13 +138,20 @@ int main()
 
 	InputImageHandler inputImageHandler(_d2i);
 	InputImagePositionHandler inputImagePositionHandler(&inputImageHandler);
-	bool changingDesiredPositions = true;
+	
 
 	SetWindowsHookEx(WH_KEYBOARD_LL, &KeyboardProc, 0, 0);
 
+	float _x = 0;
+	float _y = 0;
+
+	int sleepDurationMs = 10;
+
+	float posChangeRate = 0.5f * sleepDurationMs;
+
 	while (GetMessage(&msg, NULL, 0, 0) > 0)
 	{
-		Sleep(5);
+		Sleep(10);
 
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
@@ -149,6 +161,25 @@ int main()
 		if (GetAsyncKeyState(VK_TAB) & (1 << 15)) {
 			//printf("Tab pressed!\n");
 			layeredWindow.MoveOntoWindow(Window::GetWindowHandleFromMousePosition());
+		}
+
+		if (GetAsyncKeyState(VK_NUMPAD4) & (1 << 15)) {
+			if(inputImagePositionHandler.m_CurrX > 0.1f)
+				inputImagePositionHandler.m_CurrX -= posChangeRate;
+		}
+		if (GetAsyncKeyState(VK_NUMPAD6) & (1 << 15)) {
+			if(inputImagePositionHandler.m_CurrX < 600.0f)
+				inputImagePositionHandler.m_CurrX += posChangeRate;
+		}
+
+		if (GetAsyncKeyState(VK_NUMPAD8) & (1 << 15)) {
+			if(inputImagePositionHandler.m_CurrY > 0.1f)
+				inputImagePositionHandler.m_CurrY -= posChangeRate;
+		}
+
+		if (GetAsyncKeyState(VK_NUMPAD2) & (1 << 15)) {
+			if(inputImagePositionHandler.m_CurrY < 600.0f)
+				inputImagePositionHandler.m_CurrY += posChangeRate;
 		}
 		
 			
@@ -173,12 +204,21 @@ int main()
 
 			inputImagePositionHandler.Update();
 			inputImagePositionHandler.Draw();
+
+			WCHAR text[51];
+			swprintf_s(text, L"x: %.1f, y: %.1f", inputImagePositionHandler.m_CurrX, inputImagePositionHandler.m_CurrY);
+			//inputImagePositionHandler.SetCurrentInputPosition(_x, _y);
+			_d2i->DrawTextToScreen(text);
+
 		}
 		else {
-			inputImageHandler.DisplayAllInputs();
+			inputImageHandler.CaptureInputs();
+			inputImageHandler.DrawInputs();
 		}
 		//inputImageHandler.DrawInputs();
 		
+		
+
 		_d2i->EndDraw();
 
 		//printf("Draw count: %d\n", drawCount);
