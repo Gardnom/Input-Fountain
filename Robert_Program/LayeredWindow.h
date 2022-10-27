@@ -4,7 +4,7 @@
 
 class LayeredWindow : public Window {
 public:
-	LayeredWindow();
+	LayeredWindow(WNDPROC pWndProc);
 	void MoveOntoWindow(HWND otherWindow);
 
 	void HandleKeyPressed(unsigned int keyCode);

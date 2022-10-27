@@ -154,18 +154,25 @@ void Direct2DInterface::DrawSpriteSheet(SpriteSheet* sheet, float x, float y, fl
 		D2D1::RectF(x, y, bmp->GetSize().width + x, bmp->GetSize().height + y));*/
 }
 
-void Direct2DInterface::DrawTextToScreen(WCHAR * text)
+void Direct2DInterface::DrawTextToScreen(WCHAR * text, float posX, float posY)
 {
-	static const WCHAR helloWorld[] = L"Hello World";
+	//static const WCHAR helloWorld[] = L"Hello World";
 	D2D1_SIZE_F renderTargetSize = p_RenderTarget->GetSize();
 
 	p_RenderTarget->DrawText(
 		text,
 		wcslen(text),
 		p_DTextFormat,
-		D2D1::RectF(0, 0, renderTargetSize.width, renderTargetSize.height),
+		D2D1::RectF(posX, posY, renderTargetSize.width, renderTargetSize.height),
 		m_pWhiteBrush
 	);
+}
+
+void Direct2DInterface::RebindDc(HWND hWnd)
+{
+	RECT rect;
+	GetClientRect(hWnd, &rect);
+	((ID2D1DCRenderTarget*)p_RenderTarget)->BindDC(GetDC(hWnd), &rect);
 }
 
 ID2D1SolidColorBrush* Direct2DInterface::CreateBrush(RGBA_COL color) {

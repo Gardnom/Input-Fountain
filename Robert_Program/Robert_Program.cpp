@@ -6,10 +6,17 @@
 #include <queue>
 #include "InputImageHandler.h"
 #include "InputImagePositionHandler.h"
+#include "File.h"
+#include "Config.h"
+#include "Input.h"
+#include "KeyboardInput.h"
+#include "ControllerInput.h"
+#include "FpsCounter.h"
 
 #pragma comment(lib, "d2d1")
 #pragma comment(lib, "windowscodecs.lib")
 #pragma comment(lib, "Dwrite")
+#pragma comment(lib, "xinput")
 
 bool setupDone = false;
 Direct2DInterface* pD2i = nullptr;
@@ -36,6 +43,8 @@ LRESULT CALLBACK OverlayHook(int code, WPARAM wParam, LPARAM lParam)
 	//Ignore everything that isn't a paint request
 	if (message->message != WM_PAINT) return retCode;
 
+	printf("WM_PAINT Called");
+
 	PAINTSTRUCT psPaint;
 
 	BeginPaint(message->hwnd, &psPaint);
@@ -60,7 +69,7 @@ void DoSetup(HWND hWnd) {
 		printf(err.c_str());
 		return;
 	}
-	printf("Direct 2D interface setup");
+	printf("Direct 2D interface setup\n");
 	setupDone = true;
 
 }
@@ -83,7 +92,7 @@ HWND GetWindowHandleFromMousePosition() {
 bool spaceWasPressed;
 bool nextWasPressed;
 bool prevWasPressed;
-
+bool shouldSave;
 bool changingDesiredPositions = true;
 
 LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam, LPARAM lParam) {
@@ -93,34 +102,53 @@ LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam, LPARAM lParam) {
 	switch (wParam) {
 		case WM_KEYDOWN:
 			if (s->vkCode == VK_UP) 
-				printf("Up was pressed!");
+				shouldSave = true;
 			if (s->vkCode == VK_RIGHT)
 				nextWasPressed = true;
 			if (s->vkCode == VK_LEFT)
 				prevWasPressed = true;
 			if (s->vkCode == VK_CAPITAL)
 				changingDesiredPositions = !changingDesiredPositions;
+			break;
+		case WM_KEYUP:
+			Input::OnKeyPressed(s->vkCode);
 	}
 
 	return CallNextHookEx(NULL, code, wParam, lParam);
 }
 
+InputImageHandler inputImageHandler;
+
+LRESULT CALLBACK D2WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	LayeredWindow* pWnd = reinterpret_cast<LayeredWindow*>(GetWindowLongPtrW(hWnd, 0)); // Retrieve window pointer
+
+	switch (uMsg)
+	{
+	case WM_PAINT:
+		if (!changingDesiredPositions) {
+			inputImageHandler.DrawInputs();
+		}
+		break;
+	
+	default:
+		return DefWindowProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	return 0;
+}
+
 
 int main()
 {
-    std::cout << "Hello World!\n";
-	
-	Sleep(2000);
+	Sleep(1000);
 	HWND windowHandle = GetWindowHandleFromMousePosition();
 
 	DWORD winThreadId = GetWindowThreadProcessId(windowHandle, NULL);
 	
 	printf("Thread id: %ld\n", winThreadId);
 	SetWindowsHookEx(WH_GETMESSAGE, &OverlayHook, NULL, winThreadId);
-
 	// Create Layered window
-	
-	LayeredWindow layeredWindow;
+	LayeredWindow layeredWindow(D2WndProc);
 
 	DoSetup(layeredWindow.GetHandle());
 
@@ -136,61 +164,62 @@ int main()
 
 	float x = 0;
 
-	InputImageHandler inputImageHandler(_d2i);
+	//ControllerInput controller;
+	std::shared_ptr<ControllerInput> pController = std::make_shared<ControllerInput>();
+	//InputImageHandler inputImageHandler(_d2i, pController);
+	inputImageHandler = InputImageHandler(_d2i, pController);
+	bool settingsOk = InputImagePositionHandler::ReadSettingsFromFile(inputImageHandler, Config::settingsFilePath);
+	if(!settingsOk)
+		Config::FirstTimeSetup(&inputImageHandler);
+
+
 	InputImagePositionHandler inputImagePositionHandler(&inputImageHandler);
-	
 
 	SetWindowsHookEx(WH_KEYBOARD_LL, &KeyboardProc, 0, 0);
 
 	float _x = 0;
 	float _y = 0;
 
-	int sleepDurationMs = 10;
+	float posChangeRate = 0.5f * Config::SleepDurationMs;
 
-	float posChangeRate = 0.5f * sleepDurationMs;
+	
+	//std::shared_ptr<KeyboardInput> pKeyBoardInput = std::make_shared<KeyboardInput>();
+	Input::AddKeyPressedHandler([&](int key) {
+		// 220 is the key above tab to the left of 1
+		if (key == 220) {
+			inputImagePositionHandler.SetStateSetKey<ControllerInput>();
+		}
+	});
+
+	FpsCounter fpsCounter;
+	
+	MSG gameWindowMsg;
 
 	while (GetMessage(&msg, NULL, 0, 0) > 0)
 	{
-		Sleep(10);
-
+		//GetMessage(&gameWindowMsg, windowHandle, 0, 0);
+		Sleep(Config::SleepDurationMs);
+		
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
-						
 		
 		//printf("Drawing\n");
 		if (GetAsyncKeyState(VK_TAB) & (1 << 15)) {
 			//printf("Tab pressed!\n");
 			layeredWindow.MoveOntoWindow(Window::GetWindowHandleFromMousePosition());
+			_d2i->RebindDc(layeredWindow.GetHandle());
+			//_d2i->RebindDc(Window::GetWindowHandleFromMousePosition());
 		}
 
-		if (GetAsyncKeyState(VK_NUMPAD4) & (1 << 15)) {
-			if(inputImagePositionHandler.m_CurrX > 0.1f)
-				inputImagePositionHandler.m_CurrX -= posChangeRate;
-		}
-		if (GetAsyncKeyState(VK_NUMPAD6) & (1 << 15)) {
-			if(inputImagePositionHandler.m_CurrX < 600.0f)
-				inputImagePositionHandler.m_CurrX += posChangeRate;
-		}
-
-		if (GetAsyncKeyState(VK_NUMPAD8) & (1 << 15)) {
-			if(inputImagePositionHandler.m_CurrY > 0.1f)
-				inputImagePositionHandler.m_CurrY -= posChangeRate;
-		}
-
-		if (GetAsyncKeyState(VK_NUMPAD2) & (1 << 15)) {
-			if(inputImagePositionHandler.m_CurrY < 600.0f)
-				inputImagePositionHandler.m_CurrY += posChangeRate;
-		}
+		
 		
 			
 		inputImageHandler.CaptureInputs();
 
-
-		InvalidateRect(layeredWindow.GetHandle(), NULL, FALSE);
+		fpsCounter.Start();
 		_d2i->BeginDraw();
+		InvalidateRect(layeredWindow.GetHandle(), NULL, FALSE);
 		_d2i->ClearScreen(RGBA_COL(0, 0, 0, 1.0f));
-		_d2i->DrawCircle(glm::vec2(x, 200), 100, RGBA_COL(120, 120, 120, 1.0f));
-
 
 		if (changingDesiredPositions) {
 			if (nextWasPressed) {
@@ -201,13 +230,17 @@ int main()
 				inputImagePositionHandler.PreviousInput();
 				prevWasPressed = false;
 			}
+			if (shouldSave) {
+				
+				inputImagePositionHandler.SaveSettingsToFile(Config::settingsFilePath);
+				shouldSave = false;
+			}
 
 			inputImagePositionHandler.Update();
 			inputImagePositionHandler.Draw();
 
 			WCHAR text[51];
 			swprintf_s(text, L"x: %.1f, y: %.1f", inputImagePositionHandler.m_CurrX, inputImagePositionHandler.m_CurrY);
-			//inputImagePositionHandler.SetCurrentInputPosition(_x, _y);
 			_d2i->DrawTextToScreen(text);
 
 		}
@@ -215,15 +248,15 @@ int main()
 			inputImageHandler.CaptureInputs();
 			inputImageHandler.DrawInputs();
 		}
-		//inputImageHandler.DrawInputs();
-		
-		
 
+		
 		_d2i->EndDraw();
 
-		//printf("Draw count: %d\n", drawCount);
-		//DoDraw(myHandle);
-		x += 0.01;
+		std::string windowTitleFpsStr = fpsCounter.End();
+		//printf(windowTitleFpsStr.c_str());
+		//printf("\n");
+		//SetWindowTextA(windowHandle, windowTitleFpsStr.c_str());
+
 	}
 
 }

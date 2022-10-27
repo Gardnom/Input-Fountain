@@ -20,6 +20,15 @@ typedef struct {
 typedef glm::vec4 RGBA_COL;
 
 
+typedef struct {
+	u32 keyCode;
+	//SpriteSheet* spriteSheet;
+	glm::vec2 spriteDisplayPosition;
+	float alpha = 1.0f;
+	bool hasShadow = true;
+	std::wstring spriteFilePath;
+
+} InputImageDocument;
 
 /*typedef struct {
 	float r, g, b, a;

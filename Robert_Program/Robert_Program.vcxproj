@@ -159,7 +159,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Config.cpp" />
     <ClCompile Include="Direct2DInterface.cpp" />
+    <ClCompile Include="Input.cpp" />
     <ClCompile Include="InputImageHandler.cpp" />
     <ClCompile Include="InputImagePositionHandler.cpp" />
     <ClCompile Include="LayeredWindow.cpp" />
@@ -169,12 +171,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.h" />
+    <ClInclude Include="ControllerInput.h" />
     <ClInclude Include="CoreTypes.h" />
     <ClInclude Include="Direct2DInterface.h" />
+    <ClInclude Include="File.h" />
+    <ClInclude Include="FpsCounter.h" />
     <ClInclude Include="IGraphicsApi2D.h" />
+    <ClInclude Include="IInputInterface.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputImageHandler.h" />
     <ClInclude Include="InputImagePositionHandler.h" />
+    <ClInclude Include="KeyboardInput.h" />
     <ClInclude Include="LayeredWindow.h" />
     <ClInclude Include="SpriteSheet.h" />
     <ClInclude Include="Window.h" />

@@ -27,7 +27,10 @@ public:
 	SpriteSheet* CreateSpriteSheetFromFile(const wchar_t* filename);
 	void DrawSpriteSheet(SpriteSheet* sheet, float x, float y, float alpha = 1.0f);
 
-	void DrawTextToScreen(WCHAR* text);
+	void DrawTextToScreen(WCHAR* text, float posX = 0, float posY = 0);
+
+	void RebindDc(HWND hWnd);
+
 
 private:
 	ID2D1Factory* m_Factory;
