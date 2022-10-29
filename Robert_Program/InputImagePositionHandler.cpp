@@ -146,9 +146,21 @@ bool InputImagePositionHandler::SaveSettingsToFile(std::wstring& filePath)
 		//jObj["alpha"] = entry.alpha;
 		jObj["hasShadow"] = entry.hasShadow;
 		jObj["spriteFilePath"] = entry.spriteFilePath;
+		jObj["type"] = entry.type;
 		jArr.push_back(jObj);
 	}
-	File::WriteFile(filePath, jArr.dump(4));
+	json data;
+	json settings;
+
+	json dpadPos = json::object();
+	dpadPos["x"] = m_DpadPosition.x;
+	dpadPos["y"] = m_DpadPosition.y;
+	settings["dpadPos"] = dpadPos;
+
+	data["inputs"] = jArr;
+	data["settings"] = settings;
+
+	File::WriteFile(filePath, data.dump(4));
 	//j["objects"] = entries;
 	return true;
 	//File::WriteFile(filePath)
@@ -160,8 +172,13 @@ bool InputImagePositionHandler::ReadSettingsFromFile(InputImageHandler& inputIma
 	if (!fileContents)
 		return false;	
 	json data = json::parse(*fileContents);
-		
-	for (auto& entry : data) {
+	
+	json settings = data["settings"];
+	
+	inputImageHandler.DPAD_POSITION = glm::vec2(settings["dpadPos"]["x"], settings["dpadPos"]["y"]);
+
+	json inputs = data["inputs"];
+	for (auto& entry : inputs) {
 		InputImageWrapper wrapper;
 		int keyCode = entry["keyCode"];
 		bool hasShadow = entry["hasShadow"];
@@ -170,6 +187,13 @@ bool InputImagePositionHandler::ReadSettingsFromFile(InputImageHandler& inputIma
 		wrapper.spriteDisplayPosition.y = entry["position"]["y"];
 		wrapper.spriteFilePath = spriteFilePath;
 		wrapper.keyCode = keyCode;
+		wrapper.hasShadow = hasShadow;
+		wrapper.type = entry["type"];
+
+		if (wrapper.type == DPAD) {
+			wrapper.spriteDisplayPosition = inputImageHandler.DPAD_POSITION;
+		}
+
 		printf("Keycode: %d\n", keyCode);
 		inputImageHandler.AddInputImageSaved(spriteFilePath, wrapper);
 	}

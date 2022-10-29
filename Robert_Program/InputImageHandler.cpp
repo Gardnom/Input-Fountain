@@ -1,20 +1,37 @@
 #include "InputImageHandler.h"
+#include "ControllerInput.h"
 
+#define DPAD_UP 5
+#define DPAD_DOWN 6
+#define DPAD_LEFT 7
+#define DPAD_RIGHT 8
+
+static const std::tuple<std::wstring, int> inputFileNameToKeycodes[] = {
+	{L"dpad_up_right.png", DPAD_UP_RIGHT},
+	{L"dpad_up_left.png", DPAD_UP_LEFT},
+	{L"dpad_down_right.png", DPAD_DOWN_RIGHT},
+	{L"dpad_down_left.png", DPAD_DOWN_LEFT},
+
+	{L"dpad_left.png", DPAD_LEFT},
+	{L"dpad_right.png", DPAD_RIGHT},
+	{L"dpad_up.png", DPAD_UP},
+	{L"dpad_down.png", DPAD_DOWN},
+	{L"a.png", 1},
+	{L"b.png", 2},
+	{L"c.png", 3},
+	{L"d.png", 4},
+
+
+};
+
+static const glm::vec2 DPAD_STARTING_POINT = glm::vec2(400, 200);
+glm::vec2 InputImageHandler::DPAD_POSITION = DPAD_STARTING_POINT;
 
 InputImageHandler::InputImageHandler(Direct2DInterface* pD2i, std::shared_ptr<IInputInterface<int>> inputInterface)
 {
 	p_D2i = pD2i;
 	p_InputInterface = inputInterface;
-	//p_ImageA = p_D2i->CreateSpriteSheetFromFile(L"H:/dev/Robert_png/Resize/22px-BBCF_A_Prompt.png");
-	//p_ImageB = p_D2i->CreateSpriteSheetFromFile(L"H:/dev/Robert_png/Resize/22px-BBCF_B_Prompt.png");
-	//auto p_ImageC = p_D2i->CreateSpriteSheetFromFile(L"H:/dev/Robert_png/Resize/22px-BBCF_C_Prompt.png");
 	
-		
-	//m_InputsToCheck.push_back({VK_UP, p_ImageA, glm::vec2(200, 200)});
-	//m_InputsToCheck.push_back({ VK_DOWN, p_ImageB, glm::vec2(400, 200)});
-	//m_InputsToCheck.push_back({ VK_LEFT, p_ImageC, glm::vec2(600, 200) });
-
-	//m_ImageHeightMax = p_ImageA->p_Bmp->GetSize().height;
 }
 
 void InputImageHandler::CaptureInputs()
@@ -24,11 +41,20 @@ void InputImageHandler::CaptureInputs()
 			inputImageQueue.push(&m_InputsToCheck[i]);
 		}	
 	}*/
+	
 	p_InputInterface->Update();
+	int dpadState = p_InputInterface->GetDPADState();
 	for (int i = 0; i < m_InputsToCheck.size(); i++)
 	{
-		if (p_InputInterface->KeyState(m_InputsToCheck.at(i).keyCode)) {
-			inputImageQueue.push(&m_InputsToCheck.at(i));
+		auto& input = m_InputsToCheck.at(i);
+		if (input.type == DPAD) {
+			if (dpadState == input.keyCode) {
+				inputImageQueue.push(&input);
+			}
+			continue;
+		}
+		if (p_InputInterface->KeyState(input.keyCode)) {
+			inputImageQueue.push(&input);
 		}
 	}
 	
@@ -56,7 +82,14 @@ void InputImageHandler::DrawInputs()
 
 	for (int i = 0; i < inputImageQueue.size(); i++) {
 		InputImageWrapper* curr = inputImageQueue.front();
-		p_D2i->DrawSpriteSheet(curr->spriteSheet, curr->spriteDisplayPosition.x, curr->spriteDisplayPosition.y);
+
+		float drawX = curr->spriteDisplayPosition.x;
+		float drawY = curr->spriteDisplayPosition.y;
+		/*if (curr->type == DPAD) {
+			drawX = DPAD_POSITION.x;
+			drawY = DPAD_POSITION.y;
+		}*/
+		p_D2i->DrawSpriteSheet(curr->spriteSheet, drawX, drawY);
 		// Is an if statement faster than this? Does it really matter?
 		lastInput = curr;
 		inputImageQueue.pop();
@@ -66,7 +99,9 @@ void InputImageHandler::DrawInputs()
 void InputImageHandler::DisplayAllInputs()
 {
 	std::for_each(m_InputsToCheck.begin(), m_InputsToCheck.end(), 
-		[&](InputImageWrapper& x) {p_D2i->DrawSpriteSheet(x.spriteSheet, x.spriteDisplayPosition.x, x.spriteDisplayPosition.y, x.alpha); 
+		[&](InputImageWrapper& x) {
+		if(x.type != DPAD)
+			p_D2i->DrawSpriteSheet(x.spriteSheet, x.spriteDisplayPosition.x, x.spriteDisplayPosition.y, x.alpha);
 	});
 }
 
@@ -82,6 +117,25 @@ bool InputImageHandler::AddInputImage(std::wstring& filePath)
 	wrapper.spriteSheet = pSpriteSheet;
 	wrapper.spriteDisplayPosition = glm::vec2(0, m_OccupiedY);
 	wrapper.spriteFilePath = filePath;
+
+	std::wstring fileName = filePath.substr(filePath.find_last_of(L"/\\") + 1);
+
+	for (int i = 0; i < ARRAYSIZE(inputFileNameToKeycodes); i++) {
+		auto[name, code] = inputFileNameToKeycodes[i];
+		if (fileName == name) {
+			wrapper.keyCode = code;
+		}
+
+		if (fileName._Starts_with(L"dpad")) {
+			wrapper.type = DPAD;
+			wrapper.hasShadow = false;
+			wrapper.spriteDisplayPosition = DPAD_STARTING_POINT;
+
+		}
+	}
+
+	
+
 	m_InputsToCheck.push_back(wrapper);
 	m_OccupiedY += pSpriteSheet->p_Bmp->GetSize().height;
 

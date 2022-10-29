@@ -21,8 +21,6 @@
 bool setupDone = false;
 Direct2DInterface* pD2i = nullptr;
 
-void DoSetup(HWND hWnd);
-void DoDraw(HWND hWnd);
 
 LRESULT CALLBACK OverlayHook(int code, WPARAM wParam, LPARAM lParam)
 {
@@ -47,38 +45,9 @@ LRESULT CALLBACK OverlayHook(int code, WPARAM wParam, LPARAM lParam)
 
 	PAINTSTRUCT psPaint;
 
-	BeginPaint(message->hwnd, &psPaint);
-	//Draw your overlay here
-	if (!setupDone) {
-		DoSetup(message->hwnd);
-	}
-	
-	DoDraw(message->hwnd);
-	EndPaint(message->hwnd, &psPaint);
-
 	return retCode;
 }
 
-
-void DoSetup(HWND hWnd) {
-	pD2i = new Direct2DInterface();
-
-	auto[ok, err] = pD2i->Init(hWnd);
-	if (!ok) {
-		printf("Failed to setup Direct2D Interface\n");
-		printf(err.c_str());
-		return;
-	}
-	printf("Direct 2D interface setup\n");
-	setupDone = true;
-
-}
-
-void DoDraw(HWND hWnd) {
-	pD2i->BeginDraw();
-	pD2i->DrawCircle(glm::vec2(200, 400), 100, RGBA_COL(120, 120, 120, 1));
-	pD2i->EndDraw();
-}
 
 HWND GetWindowHandleFromMousePosition() {
 	HWND windowHandle;
@@ -119,23 +88,7 @@ LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam, LPARAM lParam) {
 
 InputImageHandler inputImageHandler;
 
-LRESULT CALLBACK D2WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-	LayeredWindow* pWnd = reinterpret_cast<LayeredWindow*>(GetWindowLongPtrW(hWnd, 0)); // Retrieve window pointer
 
-	switch (uMsg)
-	{
-	case WM_PAINT:
-		if (!changingDesiredPositions) {
-			inputImageHandler.DrawInputs();
-		}
-		break;
-	
-	default:
-		return DefWindowProc(hWnd, uMsg, wParam, lParam);
-	}
-
-	return 0;
-}
 
 
 int main()
@@ -150,7 +103,6 @@ int main()
 	// Create Layered window
 	LayeredWindow layeredWindow(D2WndProc);
 
-	DoSetup(layeredWindow.GetHandle());
 
 	HDC layeredWindowDC = GetDC(layeredWindow.GetHandle());
 	Direct2DInterface* _d2i = Direct2DInterface::WithDCTarget(layeredWindowDC, layeredWindow.GetHandle());
@@ -177,10 +129,7 @@ int main()
 
 	SetWindowsHookEx(WH_KEYBOARD_LL, &KeyboardProc, 0, 0);
 
-	float _x = 0;
-	float _y = 0;
-
-	float posChangeRate = 0.5f * Config::SleepDurationMs;
+	float posChangeRate = 2.0f * Config::SleepDurationMs;
 
 	
 	//std::shared_ptr<KeyboardInput> pKeyBoardInput = std::make_shared<KeyboardInput>();
@@ -217,10 +166,11 @@ int main()
 		inputImageHandler.CaptureInputs();
 
 		fpsCounter.Start();
-		_d2i->BeginDraw();
+		// This makes it very laggy: Edit, no it doesn't
 		InvalidateRect(layeredWindow.GetHandle(), NULL, FALSE);
-		_d2i->ClearScreen(RGBA_COL(0, 0, 0, 1.0f));
 
+		_d2i->BeginDraw();
+		_d2i->ClearScreen(RGBA_COL(0, 0, 0, 1.0f));
 		if (changingDesiredPositions) {
 			if (nextWasPressed) {
 				inputImagePositionHandler.NextInput();
@@ -242,15 +192,14 @@ int main()
 			WCHAR text[51];
 			swprintf_s(text, L"x: %.1f, y: %.1f", inputImagePositionHandler.m_CurrX, inputImagePositionHandler.m_CurrY);
 			_d2i->DrawTextToScreen(text);
-
 		}
 		else {
 			inputImageHandler.CaptureInputs();
 			inputImageHandler.DrawInputs();
-		}
-
 		
+		}
 		_d2i->EndDraw();
+
 
 		std::string windowTitleFpsStr = fpsCounter.End();
 		//printf(windowTitleFpsStr.c_str());

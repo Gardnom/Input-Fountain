@@ -10,7 +10,7 @@ public:
 
 	virtual void Update() = 0;
 
-	KEYCODETYPE ConsumeCurrentKey() {
+	virtual KEYCODETYPE ConsumeCurrentKey() {
 		auto currKeys = CurrentKeys();
 		if (currKeys.size() > 0) {
 			KEYCODETYPE toReturn = currKeys.front();
@@ -22,5 +22,9 @@ public:
 	
 	virtual ~IInputInterface() {
 
+	}
+	
+	virtual int GetDPADState() {
+		return 0;
 	}
 };

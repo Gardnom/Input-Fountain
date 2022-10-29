@@ -70,6 +70,11 @@ LayeredWindow::LayeredWindow(WNDPROC pWndProc)
 }
 
 
+LayeredWindow::LayeredWindow()
+{
+
+}
+
 void LayeredWindow::MoveOntoWindow(HWND otherWindow)
 {
 	POINT p;
@@ -82,7 +87,11 @@ void LayeredWindow::MoveOntoWindow(HWND otherWindow)
 	GetClientRect(otherWindow, &rect);
 
 	//MoveWindow(m_Handle, p.x, p.y, rect.right, rect.bottom, FALSE);
-	SetWindowPos(m_Handle, HWND_TOPMOST, p.x, p.y, rect.right, rect.bottom, NULL);
+	
+	// Keep the window small, for some reason it makes the game stuttery when covering entire screen
+	//SetWindowPos(m_Handle, HWND_TOPMOST, p.x, p.y, rect.right, rect.bottom, NULL);
+	SetWindowPos(m_Handle, HWND_TOPMOST, p.x, p.y, 800, 600, NULL);
+	
 	/*SIZE size;
 	size.cx = rect.right;
 	size.cy = rect.bottom;

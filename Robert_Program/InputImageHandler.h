@@ -6,6 +6,12 @@
 #include <chrono>
 #include "IInputInterface.h"
 
+enum InputType {
+	BUTTON,
+	DPAD,
+	TRIGGER
+};
+
 typedef struct {
 	u32 keyCode;
 	SpriteSheet* spriteSheet;
@@ -13,6 +19,7 @@ typedef struct {
 	float alpha = 1.0f;
 	bool hasShadow = true;
 	std::wstring spriteFilePath;
+	InputType type = BUTTON;
 
 } InputImageWrapper;
 
@@ -40,13 +47,16 @@ public:
 	std::vector<InputImageWrapper> m_InputsToCheck;
 
 	friend class InputImagePositionHandler;
+	Direct2DInterface* p_D2i;
+
+	static glm::vec2 DPAD_POSITION;
 
 protected:
 	SpriteSheet* p_ImageA;
 	SpriteSheet* p_ImageB;
-	Direct2DInterface* p_D2i;
 	float m_ImageHeightMax;
 	float m_OccupiedY = 0.0f;
+
 
 	std::shared_ptr<IInputInterface<int>> p_InputInterface;
 

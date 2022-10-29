@@ -14,6 +14,7 @@ typedef int InputImagePositionHandlerState;
 
 class InputImagePositionHandler {
 public:
+	InputImagePositionHandler();
 	InputImagePositionHandler(InputImageHandler* inputImageHandler);
 	void Update();
 	void Draw();
@@ -45,6 +46,8 @@ private:
 	std::vector<InputImageWrapper>* p_Inputs;
 	InputImageWrapper* m_CurrentInput;
 	std::vector<InputImageWrapper>::iterator it_CurrentInput;
+
+	glm::vec2 m_DpadPosition;
 
 	std::unique_ptr<IInputInterface<int>> p_InputInterface;
 
