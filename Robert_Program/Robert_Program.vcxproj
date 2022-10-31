@@ -159,17 +159,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="App.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="Direct2DInterface.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="InputImageHandler.cpp" />
     <ClCompile Include="InputImagePositionHandler.cpp" />
     <ClCompile Include="LayeredWindow.cpp" />
+    <ClCompile Include="Menu.cpp" />
     <ClCompile Include="Robert_Program.cpp" />
     <ClCompile Include="SpriteSheet.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="App.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="ControllerInput.h" />
     <ClInclude Include="CoreTypes.h" />
@@ -183,6 +186,7 @@
     <ClInclude Include="InputImagePositionHandler.h" />
     <ClInclude Include="KeyboardInput.h" />
     <ClInclude Include="LayeredWindow.h" />
+    <ClInclude Include="Menu.h" />
     <ClInclude Include="SpriteSheet.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>

@@ -34,12 +34,11 @@ FAILABLE_PROCEDURE Direct2DInterface::Init(HWND hWnd) {
 	return { true, "" };
 }
 
-Direct2DInterface* Direct2DInterface::WithDCTarget(HDC hDC, HWND hWnd)
+std::shared_ptr<Direct2DInterface> Direct2DInterface::WithDCTarget(HDC hDC, HWND hWnd)
 {
 	static const WCHAR fontName[] = L"Verdana";
-	static const FLOAT fontSize = 50;
 
-	Direct2DInterface* d2i = new Direct2DInterface;
+	std::shared_ptr<Direct2DInterface> d2i = std::make_shared<Direct2DInterface>();
 	const D2D1_PIXEL_FORMAT format =
 		D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,
 			D2D1_ALPHA_MODE_PREMULTIPLIED);
@@ -83,7 +82,7 @@ Direct2DInterface* Direct2DInterface::WithDCTarget(HDC hDC, HWND hWnd)
 		DWRITE_FONT_WEIGHT_NORMAL,
 		DWRITE_FONT_STYLE_NORMAL,
 		DWRITE_FONT_STRETCH_NORMAL,
-		fontSize,
+		d2i->FontSize(),
 		L"",
 		&d2i->p_DTextFormat);
 
@@ -173,6 +172,11 @@ void Direct2DInterface::RebindDc(HWND hWnd)
 	RECT rect;
 	GetClientRect(hWnd, &rect);
 	((ID2D1DCRenderTarget*)p_RenderTarget)->BindDC(GetDC(hWnd), &rect);
+}
+
+const FLOAT Direct2DInterface::FontSize()
+{
+	return m_FontSize;
 }
 
 ID2D1SolidColorBrush* Direct2DInterface::CreateBrush(RGBA_COL color) {

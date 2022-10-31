@@ -14,6 +14,7 @@
 #include "KeyboardInput.h"
 #include "ControllerInput.h"
 #include "FpsCounter.h"
+#include "Menu.h"
 
 class App
 {
@@ -33,9 +34,10 @@ private:
 	std::shared_ptr<LayeredWindow> p_LayeredWindow;
 	FpsCounter m_FpsCounter;
 
+	Menu m_Menu;
 
 	HDC m_LayeredWindowDC;
-	Direct2DInterface* p_D2i;
+	std::shared_ptr<Direct2DInterface> p_D2i;
 	MSG m_MSG;
 
 	LONG m_CurStyle;

@@ -28,10 +28,14 @@ typedef struct {
 class InputImageHandler {
 public:
 
-	InputImageHandler(Direct2DInterface* pD2i, std::shared_ptr<IInputInterface<int>> inputInterface);
+	InputImageHandler(std::shared_ptr<Direct2DInterface> pD2i, std::shared_ptr<IInputInterface<int>> inputInterface);
 	InputImageHandler() {
 
 	}
+	InputImageHandler& operator=(InputImageHandler&& other) noexcept;
+	~InputImageHandler();
+
+	void Destroy();
 
 	void CaptureInputs();
 	void DrawInputs();
@@ -47,13 +51,11 @@ public:
 	std::vector<InputImageWrapper> m_InputsToCheck;
 
 	friend class InputImagePositionHandler;
-	Direct2DInterface* p_D2i;
+	std::shared_ptr<Direct2DInterface> p_D2i;
 
 	static glm::vec2 DPAD_POSITION;
 
 protected:
-	SpriteSheet* p_ImageA;
-	SpriteSheet* p_ImageB;
 	float m_ImageHeightMax;
 	float m_OccupiedY = 0.0f;
 

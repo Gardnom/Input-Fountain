@@ -75,6 +75,12 @@ LayeredWindow::LayeredWindow()
 
 }
 
+LayeredWindow::~LayeredWindow()
+{
+		
+	DestroyWindow(m_Handle);
+}
+
 void LayeredWindow::MoveOntoWindow(HWND otherWindow)
 {
 	POINT p;

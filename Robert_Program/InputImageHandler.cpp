@@ -24,20 +24,45 @@ static const std::tuple<std::wstring, int> inputFileNameToKeycodes[] = {
 
 };
 
-static const glm::vec2 DPAD_STARTING_POINT = glm::vec2(400, 200);
+static glm::vec2 DPAD_STARTING_POINT = glm::vec2(400, 200);
 glm::vec2 InputImageHandler::DPAD_POSITION = DPAD_STARTING_POINT;
 
-InputImageHandler::InputImageHandler(Direct2DInterface* pD2i, std::shared_ptr<IInputInterface<int>> inputInterface)
+
+InputImageHandler::InputImageHandler(std::shared_ptr<Direct2DInterface> pD2i, std::shared_ptr<IInputInterface<int>> inputInterface)
 {
 	p_D2i = pD2i;
 	p_InputInterface = inputInterface;
 	
 }
 
+InputImageHandler& InputImageHandler::operator=(InputImageHandler&& other) noexcept
+{
+	Destroy();
+	if (this != &other) {
+		p_InputInterface = other.p_InputInterface;
+		p_D2i = other.p_D2i;
+		m_ImageHeightMax = other.m_ImageHeightMax;
+	}
+	return *this;
+}
+
+InputImageHandler::~InputImageHandler()
+{
+	Destroy();
+}
+
+void InputImageHandler::Destroy()
+{
+	for (auto x : m_InputsToCheck) {
+		delete x.spriteSheet;
+	}
+	m_InputsToCheck.clear();
+}
+
 void InputImageHandler::CaptureInputs()
 {
 	/*for (int i = 0; i < m_InputsToCheck.size(); i++) {
-		if (GetAsyncKeyState(m_InputsToCheck[i].keyCode) & (1 << 15)) {
+		if (GetAsyncKeyState(m_InputsToCheck[i].keyCode) & (1 << 15)) {	
 			inputImageQueue.push(&m_InputsToCheck[i]);
 		}	
 	}*/

@@ -10,7 +10,7 @@ class Direct2DInterface : public IGraphicsApi2D {
 public:
 	Direct2DInterface();
 	~Direct2DInterface();
-	static Direct2DInterface* WithDCTarget(HDC hDC, HWND hWnd);
+	static std::shared_ptr<Direct2DInterface> WithDCTarget(HDC hDC, HWND hWnd);
 
 	FAILABLE_PROCEDURE Init(HWND hWnd);
 	void BeginDraw();
@@ -31,6 +31,8 @@ public:
 
 	void RebindDc(HWND hWnd);
 
+	const FLOAT FontSize();
+
 
 private:
 	ID2D1Factory* m_Factory;
@@ -44,7 +46,7 @@ private:
 	// Text
 	IDWriteFactory* p_DWriteFactory;
 	IDWriteTextFormat* p_DTextFormat;
-
+	FLOAT m_FontSize = 20;
 
 
 };

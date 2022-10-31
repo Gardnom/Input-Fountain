@@ -13,6 +13,11 @@ InputImagePositionHandler::InputImagePositionHandler(InputImageHandler* inputIma
 	m_CurrY = it_CurrentInput->spriteDisplayPosition.y;
 }
 
+InputImagePositionHandler::InputImagePositionHandler()
+{
+
+}
+
 void InputImagePositionHandler::Update()
 {
 
@@ -63,7 +68,13 @@ void InputImagePositionHandler::NextInput()
 	it_CurrentInput->alpha = 1.0f;
 	m_CurrInputAlpha = 1.0f;
 	// c++ uses past the end iterators so need to check before advancing
-	if (std::distance(it_CurrentInput, p_InputImageHandler->m_InputsToCheck.end()) > 1) {
+	/*if (std::distance(it_CurrentInput, p_InputImageHandler->m_InputsToCheck.end()) > 1) {
+		std::advance(it_CurrentInput, 1);
+		m_CurrX = it_CurrentInput->spriteDisplayPosition.x;
+		m_CurrY = it_CurrentInput->spriteDisplayPosition.y;
+	}*/
+	auto distance = it_CurrentInput - p_InputImageHandler->m_InputsToCheck.begin();
+	if (distance < 3) {
 		std::advance(it_CurrentInput, 1);
 		m_CurrX = it_CurrentInput->spriteDisplayPosition.x;
 		m_CurrY = it_CurrentInput->spriteDisplayPosition.y;
