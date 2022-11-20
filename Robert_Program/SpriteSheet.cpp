@@ -1,4 +1,5 @@
 #include "SpriteSheet.h"
+#include <exception>
 
 SpriteSheet::SpriteSheet(const wchar_t* filename, ID2D1RenderTarget* renderTarget)
 {
@@ -44,7 +45,17 @@ SpriteSheet::SpriteSheet(const wchar_t* filename, ID2D1RenderTarget* renderTarge
 
 SpriteSheet::~SpriteSheet()
 {
-	if (p_Bmp) 
-		p_Bmp->Release();
+	try
+	{
+		if (p_Bmp) {
+			p_Bmp->Release();
+			p_Bmp = nullptr;
+		}
+	}
+	catch (const std::exception& ex)
+	{
+		
+	}
+	
 }
 

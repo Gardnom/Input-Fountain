@@ -8,7 +8,11 @@ public:
 	virtual int KeyState(KEYCODETYPE keycode) = 0;
 	virtual std::queue<KEYCODETYPE>& CurrentKeys() = 0;
 
-	virtual void Update() = 0;
+	virtual bool Update() = 0;
+
+
+
+	virtual bool IsConnected() = 0;
 
 	virtual KEYCODETYPE ConsumeCurrentKey() {
 		auto currKeys = CurrentKeys();

@@ -4,10 +4,7 @@
 #pragma comment(lib, "windowscodecs.lib")
 #pragma comment(lib, "Dwrite")
 #pragma comment(lib, "xinput")
-
-bool setupDone = false;
-Direct2DInterface* pD2i = nullptr;
-
+#pragma comment(lib, "user32.lib")
 
 LRESULT CALLBACK OverlayHook(int code, WPARAM wParam, LPARAM lParam)
 {
@@ -35,6 +32,9 @@ LRESULT CALLBACK OverlayHook(int code, WPARAM wParam, LPARAM lParam)
 	return retCode;
 }
 
+#ifdef _DEBUG
+
+
 int main()
 {
 	Sleep(1000);
@@ -54,3 +54,23 @@ int main()
 
 
 }
+
+#else 
+INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT nCmdShow) 
+{
+	Sleep(1000);
+	HWND windowHandle = Window::GetWindowHandleFromMousePosition();
+
+	DWORD winThreadId = GetWindowThreadProcessId(windowHandle, NULL);
+
+	printf("Thread id: %ld\n", winThreadId);
+	SetWindowsHookEx(WH_GETMESSAGE, &OverlayHook, NULL, winThreadId);
+
+
+	MSG gameWindowMsg;
+
+	App app;
+	app.Setup();
+	app.Run();
+}
+#endif

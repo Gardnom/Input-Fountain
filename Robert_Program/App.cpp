@@ -1,4 +1,5 @@
 #include "App.h"
+#include "Error.h"
 
 LRESULT CALLBACK D2WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	LayeredWindow* pWnd = reinterpret_cast<LayeredWindow*>(GetWindowLongPtrW(hWnd, 0)); // Retrieve window pointer
@@ -22,6 +23,10 @@ LRESULT CALLBACK D2WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	return 0;
 }
 LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam, LPARAM lParam);
+
+#define KEY_F9 120
+#define KEY_F8 119
+#define KEY_F7 118
 
 App::App()
 {
@@ -68,25 +73,40 @@ void App::SetupWindow()
 	m_CurStyle = GetWindowLong(p_LayeredWindow->GetHandle(), GWL_EXSTYLE);
 	SetWindowLong(p_LayeredWindow->GetHandle(), GWL_EXSTYLE, m_CurStyle | WS_EX_LAYERED);
 
+	m_Menu = Menu(p_D2i);
 	m_InputImageHandler = InputImageHandler(p_D2i, p_ControllerInput);
 
 	bool settingsOk = InputImagePositionHandler::ReadSettingsFromFile(m_InputImageHandler, Config::settingsFilePath);
 	if (!settingsOk)
 		Config::FirstTimeSetup(&m_InputImageHandler);
 
+	m_InputImageHandler.OrderImages();
+
 	// -------
 	m_InputImagePositionHandler = InputImagePositionHandler(&m_InputImageHandler);
 	// -------
-	p_LayeredWindow->MoveOntoWindow(Window::GetWindowHandleFromMousePosition());
+
+	HWND targetWnd = Window::GetWindowHandleFromMousePosition();
+	Error::m_ParentWnd = targetWnd;
+	p_LayeredWindow->MoveOntoWindow(targetWnd);
 	p_D2i->RebindDc(p_LayeredWindow->GetHandle());
 
-	m_Menu = Menu(p_D2i);
 }
 
 
+void App::TerminateProgram()
+{
+	m_Running = false;
+}
+
+void App::Cleanup()
+{
+	m_InputImageHandler.Destroy();
+}
+
 void App::Run()
 {
-	while (GetMessage(&m_MSG, NULL, 0, 0) > 0)
+	while (m_Running && GetMessage(&m_MSG, NULL, 0, 0) > 0)
 	{
 		//GetMessage(&gameWindowMsg, windowHandle, 0, 0);
 		Sleep(Config::SleepDurationMs);
@@ -98,7 +118,7 @@ void App::Run()
 		DispatchMessage(&m_MSG);
 
 
-		m_InputImageHandler.CaptureInputs();
+		m_InputImageHandler.CaptureInputs(m_Menu);
 
 		m_FpsCounter.Start();
 		// This makes it very laggy: Edit, no it doesn't
@@ -108,6 +128,7 @@ void App::Run()
 		p_D2i->ClearScreen(RGBA_COL(0, 0, 0, 1.0f));
 		if (changingDesiredPositions) {
 		
+			m_Menu.DisplayMessageOnce(L"Press UP arrow to save config");
 			m_InputImagePositionHandler.Update();
 			m_InputImagePositionHandler.Draw();
 
@@ -116,7 +137,7 @@ void App::Run()
 			p_D2i->DrawTextToScreen(text);*/
 		}
 		else {
-			m_InputImageHandler.CaptureInputs();
+			//m_InputImageHandler.CaptureInputs(m_Menu);
 			m_InputImageHandler.DrawInputs();
 
 		}
@@ -130,16 +151,23 @@ void App::Run()
 		//SetWindowTextA(windowHandle, windowTitleFpsStr.c_str());
 
 	}
-}
 
+	Cleanup();
+}
+ 
 
 
 
 void App::OnKeyPressed(KEYCODE key)
 {
+
+	printf("Key: %d\n", key);
 	switch (key) {
-	case VK_CAPITAL:
+	case KEY_F7:
 		changingDesiredPositions = !changingDesiredPositions;
+		break;
+	case KEY_F9:
+		TerminateProgram();
 		break;
 	case VK_TAB:
 		SetupWindow();
@@ -156,6 +184,8 @@ void App::OnKeyPressed(KEYCODE key)
 			break;
 		case VK_LEFT:
 			m_InputImagePositionHandler.PreviousInput();
+			break;
+		
 		}
 	}
 

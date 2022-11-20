@@ -36,7 +36,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 }
 
 
-LayeredWindow::LayeredWindow(WNDPROC pWndProc)
+LayeredWindow::LayeredWindow(WNDPROC pWndProc, int width, int height): m_Width(width), m_Height(height)
 {
 	ZeroMemory(&m_Wcex, sizeof(WNDCLASSEX));
 	m_Wcex.cbSize = sizeof(WNDCLASSEX);
@@ -53,7 +53,7 @@ LayeredWindow::LayeredWindow(WNDPROC pWndProc)
 		printf("Failed to register class: %ld\n", GetLastError());
 	}
 
-	m_Handle = CreateWindowEx(WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED, L"LayeredWindow", L"My window", WS_POPUP | WS_VISIBLE, 0, 0, 800, 600, NULL, NULL, NULL, NULL);
+	m_Handle = CreateWindowEx(WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED, L"LayeredWindow", L"My window", WS_POPUP | WS_VISIBLE, 0, 0, width, height, NULL, NULL, NULL, NULL);
 	if (m_Handle == NULL) {
 		printf("Failed to create layered window: %ld\n", GetLastError());
 	}
@@ -70,9 +70,9 @@ LayeredWindow::LayeredWindow(WNDPROC pWndProc)
 }
 
 
-LayeredWindow::LayeredWindow()
+LayeredWindow::LayeredWindow(int width, int height): m_Width(width), m_Height(height)
 {
-
+	
 }
 
 LayeredWindow::~LayeredWindow()
@@ -96,7 +96,7 @@ void LayeredWindow::MoveOntoWindow(HWND otherWindow)
 	
 	// Keep the window small, for some reason it makes the game stuttery when covering entire screen
 	//SetWindowPos(m_Handle, HWND_TOPMOST, p.x, p.y, rect.right, rect.bottom, NULL);
-	SetWindowPos(m_Handle, HWND_TOPMOST, p.x, p.y, 800, 600, NULL);
+	SetWindowPos(m_Handle, HWND_TOPMOST, p.x + xOffset, p.y + yOffset, m_Width, m_Height, NULL);
 	
 	/*SIZE size;
 	size.cx = rect.right;

@@ -3,8 +3,10 @@
 namespace Config {
 	void LoadInputImages(InputImageHandler* inputImageHandler) {
 		File f;
-
-		if (auto pngFiles = f.GetAllFilesInDirectoryWithExtension("H:/dev/Robert_png/Resize", ".png")) {
+		//std::string imageDirectory = "H:/dev/Robert_png/Resize";
+		std::wstring imageDirectory = File::ExePath() + std::wstring(L"/images");
+		printf(std::string(imageDirectory.begin(), imageDirectory.end()).c_str());
+		if (auto pngFiles = f.GetAllFilesInDirectoryWithExtension(imageDirectory, ".png")) {
 			for (auto file : *pngFiles) {
 				std::string str = file.string();
 				std::cout << file << "\n";

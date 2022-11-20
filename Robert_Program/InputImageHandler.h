@@ -5,10 +5,12 @@
 #include <memory>
 #include <chrono>
 #include "IInputInterface.h"
+#include "Menu.h"
 
 enum InputType {
 	BUTTON,
 	DPAD,
+	DPAD_NEUTRAL,
 	TRIGGER
 };
 
@@ -37,7 +39,7 @@ public:
 
 	void Destroy();
 
-	void CaptureInputs();
+	void CaptureInputs(Menu& menu);
 	void DrawInputs();
 
 	void DisplayAllInputs();
@@ -45,8 +47,11 @@ public:
 	bool AddInputImage(std::wstring& filePath);
 	bool AddInputImageSaved(std::wstring& filePath, InputImageWrapper& wrapper);
 
+	bool OrderImages();
+
 	std::queue<InputImageWrapper*> inputImageQueue;
 	InputImageWrapper* lastInput = NULL;
+	InputImageWrapper* m_LastDpadInput = NULL;
 	// A list containing pairs of KeyCode -> spritesheet* tuples
 	std::vector<InputImageWrapper> m_InputsToCheck;
 
@@ -55,15 +60,23 @@ public:
 
 	static glm::vec2 DPAD_POSITION;
 
+	
+
 protected:
 	float m_ImageHeightMax;
 	float m_OccupiedY = 0.0f;
+
+	Menu* m_Menu;
 
 
 	std::shared_ptr<IInputInterface<int>> p_InputInterface;
 
 	// Time point when last input was captured
 	std::chrono::time_point<std::chrono::steady_clock> m_LastInputCaptureTimePoint;
+	std::chrono::time_point<std::chrono::steady_clock> m_LastDpadInputCaptureTimePoint;
+
 
 	bool ShouldDrawLastInput();
+
+	bool ShouldDrawLastInputDpad();
 };

@@ -25,7 +25,7 @@ static const std::tuple<std::wstring, int> inputFileNameToKeycodes[] = {
 };
 
 static glm::vec2 DPAD_STARTING_POINT = glm::vec2(400, 200);
-glm::vec2 InputImageHandler::DPAD_POSITION = DPAD_STARTING_POINT;
+glm::vec2 InputImageHandler::DPAD_POSITION = glm::vec2(400, 200);
 
 
 InputImageHandler::InputImageHandler(std::shared_ptr<Direct2DInterface> pD2i, std::shared_ptr<IInputInterface<int>> inputInterface)
@@ -54,12 +54,12 @@ InputImageHandler::~InputImageHandler()
 void InputImageHandler::Destroy()
 {
 	for (auto x : m_InputsToCheck) {
-		delete x.spriteSheet;
+		delete x.spriteSheet;		
 	}
 	m_InputsToCheck.clear();
 }
 
-void InputImageHandler::CaptureInputs()
+void InputImageHandler::CaptureInputs(Menu& menu)
 {
 	/*for (int i = 0; i < m_InputsToCheck.size(); i++) {
 		if (GetAsyncKeyState(m_InputsToCheck[i].keyCode) & (1 << 15)) {	
@@ -67,7 +67,10 @@ void InputImageHandler::CaptureInputs()
 		}	
 	}*/
 	
-	p_InputInterface->Update();
+	bool ok = p_InputInterface->Update();
+	if (!ok) {
+		menu.DisplayMessageOnce(L"Controller is not connected!");
+	}
 	int dpadState = p_InputInterface->GetDPADState();
 	for (int i = 0; i < m_InputsToCheck.size(); i++)
 	{
@@ -88,9 +91,8 @@ void InputImageHandler::CaptureInputs()
 
 void InputImageHandler::DrawInputs()
 {
-	if (inputImageQueue.size() < 1 && lastInput != NULL && ShouldDrawLastInput()) {
-		p_D2i->DrawSpriteSheet(lastInput->spriteSheet, lastInput->spriteDisplayPosition.x, lastInput->spriteDisplayPosition.y);
-	}
+	
+
 
 	if (inputImageQueue.size() > 0) {
 		m_LastInputCaptureTimePoint = std::chrono::high_resolution_clock::now();
@@ -105,19 +107,45 @@ void InputImageHandler::DrawInputs()
 		p_D2i->DrawSpriteSheet(c.spriteSheet, c.spriteDisplayPosition.x, c.spriteDisplayPosition.y, 0.2f);
 	}
 
+	bool dpadPressed = false;
+	bool nonDpadPressed = false;
+
+	wchar_t buf[50];
+	swprintf_s(buf, L"DPAD_X: %.2f | DPAD_Y: %.2f", DPAD_POSITION.x, DPAD_POSITION.y);
+	p_D2i->DrawTextToScreen(buf, 0, 300);
+	//m_Menu->DisplayMessageOnce(buf);
+
 	for (int i = 0; i < inputImageQueue.size(); i++) {
 		InputImageWrapper* curr = inputImageQueue.front();
 
 		float drawX = curr->spriteDisplayPosition.x;
 		float drawY = curr->spriteDisplayPosition.y;
-		/*if (curr->type == DPAD) {
+		if (curr->type == DPAD) {
 			drawX = DPAD_POSITION.x;
 			drawY = DPAD_POSITION.y;
-		}*/
+		}
 		p_D2i->DrawSpriteSheet(curr->spriteSheet, drawX, drawY);
+		
 		// Is an if statement faster than this? Does it really matter?
-		lastInput = curr;
+		if (curr->type == DPAD) {
+			dpadPressed = true;
+			m_LastDpadInput = curr;
+			m_LastDpadInputCaptureTimePoint = std::chrono::high_resolution_clock::now();
+		}
+		else {
+			lastInput = curr;
+			nonDpadPressed = true;
+			m_LastInputCaptureTimePoint = std::chrono::high_resolution_clock::now();
+		}
+
 		inputImageQueue.pop();
+	}
+
+	if (m_LastDpadInput != NULL && !dpadPressed && ShouldDrawLastInputDpad()) {
+		p_D2i->DrawSpriteSheet(m_LastDpadInput->spriteSheet, DPAD_POSITION.x, DPAD_POSITION.y);
+	}
+	if (!nonDpadPressed && lastInput != NULL && ShouldDrawLastInput()) {
+		p_D2i->DrawSpriteSheet(lastInput->spriteSheet, lastInput->spriteDisplayPosition.x, lastInput->spriteDisplayPosition.y);
 	}
 }
 
@@ -144,6 +172,7 @@ bool InputImageHandler::AddInputImage(std::wstring& filePath)
 	wrapper.spriteFilePath = filePath;
 
 	std::wstring fileName = filePath.substr(filePath.find_last_of(L"/\\") + 1);
+	
 
 	for (int i = 0; i < ARRAYSIZE(inputFileNameToKeycodes); i++) {
 		auto[name, code] = inputFileNameToKeycodes[i];
@@ -155,6 +184,9 @@ bool InputImageHandler::AddInputImage(std::wstring& filePath)
 			wrapper.type = DPAD;
 			wrapper.hasShadow = false;
 			wrapper.spriteDisplayPosition = DPAD_STARTING_POINT;
+			if (fileName._Starts_with(L"dpad_neutral")) {
+				wrapper.type = DPAD_NEUTRAL;
+			}
 
 		}
 	}
@@ -184,8 +216,31 @@ bool InputImageHandler::AddInputImageSaved(std::wstring& filePath, InputImageWra
 	return true;
 }
 
+bool InputImageHandler::OrderImages()
+{
+	// Find index of Dpad_Neutral
+	int dpadNeutralIndex = -1;
+	for (int i = 0; i < m_InputsToCheck.size(); i++) {
+		if (m_InputsToCheck.at(i).type == DPAD_NEUTRAL)
+			dpadNeutralIndex = i;
+	}
+	if (dpadNeutralIndex == -1) return false;
+	InputImageWrapper tmp = m_InputsToCheck.at(4);
+	m_InputsToCheck[4] = m_InputsToCheck.at(dpadNeutralIndex);
+	m_InputsToCheck[dpadNeutralIndex] = tmp;
+	//m_InputsToCheck.insert(m_InputsToCheck.begin() + 4, m_InputsToCheck.at(dpadNeutralIndex));
+	//m_InputsToCheck.insert(m_InputsToCheck.begin() + dpadNeutralIndex, tmp);
+	return true;
+}
+
 bool InputImageHandler::ShouldDrawLastInput()
 {
 	auto elapsed = std::chrono::high_resolution_clock::now() - m_LastInputCaptureTimePoint;
+	return std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() <= 5000;
+}
+
+bool InputImageHandler::ShouldDrawLastInputDpad()
+{
+	auto elapsed = std::chrono::high_resolution_clock::now() - m_LastDpadInputCaptureTimePoint;
 	return std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() <= 5000;
 }

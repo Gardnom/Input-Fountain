@@ -14,7 +14,8 @@ namespace Config {
 	
 	static const int SleepDurationMs = 5;
 
-	static std::wstring settingsFilePath = L"H:/dev/Robert_png/settings.json";
+	//static std::wstring settingsFilePath = L"H:/dev/Robert_png/settings.json";
+	static std::wstring settingsFilePath = File::ExePath() + L"/settings.json";
 
 	void LoadInputImages(InputImageHandler* inputImageHandler);
 

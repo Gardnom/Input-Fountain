@@ -30,8 +30,8 @@ public:
 		return GetAsyncKeyState(keycode) & (1 << 15);
 	}
 
-	void Update() {
-
+	bool Update() {
+		return true;
 	}
 	
 };

@@ -4,8 +4,8 @@
 
 class LayeredWindow : public Window {
 public:
-	LayeredWindow();
-	LayeredWindow(WNDPROC pWndProc);
+	LayeredWindow(int width = 800, int height = 600);
+	LayeredWindow(WNDPROC pWndProc, int width = 800, int height = 600);
 	~LayeredWindow();
 	void MoveOntoWindow(HWND otherWindow);
 
@@ -16,5 +16,9 @@ public:
 private:
 	WNDCLASSEX m_Wcex;
 	HBRUSH m_BackgroundBrush;
+
+	int m_Width = 800, m_Height = 600;
+	// x Starting point for window in relation to target window
+	int xOffset = 0, yOffset = 0;
 
 };

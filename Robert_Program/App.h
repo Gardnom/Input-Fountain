@@ -29,6 +29,11 @@ public:
 	void SetupWindow();
 
 private:
+
+	void TerminateProgram();
+	void Cleanup();
+	bool m_Running = true;
+
 	InputImageHandler m_InputImageHandler;
 	InputImagePositionHandler m_InputImagePositionHandler;
 	std::shared_ptr<LayeredWindow> p_LayeredWindow;

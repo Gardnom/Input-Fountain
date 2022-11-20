@@ -61,6 +61,10 @@ public:
 		return m_KeysPressed;
 	}
 
+	bool IsConnected() {
+		return true;
+	}
+
 	int ConsumeCurrentKey() override {
 		WORD btns = m_State.Gamepad.wButtons;
 		if (btns & XINPUT_GAMEPAD_DPAD_UP) {
@@ -111,13 +115,16 @@ public:
 		}
 	}
 
-	void Update() {
+	bool Update() {
 		m_LastPacketNumber = m_State.dwPacketNumber;
+		
+		DWORD dwResult;
 		DWORD dwResult = XInputGetState(0, &m_State);
 		if (dwResult != ERROR_SUCCESS) {
-			printf("Controller is not connected!\n");
-			return;
+			//printf("Controller is not connected!\n");
+			return false;
 		}
+
 		if (m_State.dwPacketNumber != m_LastPacketNumber) {
 			// Controller state has been updated;
 
@@ -152,6 +159,7 @@ public:
 			}
 		}
 
+		return true;
 	}
 
 	int KeyState(int keycode) {

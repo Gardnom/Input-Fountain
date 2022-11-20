@@ -74,11 +74,12 @@ void InputImagePositionHandler::NextInput()
 		m_CurrY = it_CurrentInput->spriteDisplayPosition.y;
 	}*/
 	auto distance = it_CurrentInput - p_InputImageHandler->m_InputsToCheck.begin();
-	if (distance < 3) {
+	if (distance < 4) {
 		std::advance(it_CurrentInput, 1);
 		m_CurrX = it_CurrentInput->spriteDisplayPosition.x;
 		m_CurrY = it_CurrentInput->spriteDisplayPosition.y;
 	}
+	SetState(0);
 }
 
 void InputImagePositionHandler::PreviousInput()
@@ -90,6 +91,7 @@ void InputImagePositionHandler::PreviousInput()
 		m_CurrX = it_CurrentInput->spriteDisplayPosition.x;
 		m_CurrY = it_CurrentInput->spriteDisplayPosition.y;
 	}
+	SetState(0);
 }
 
 /*template <typename InterfaceType>
@@ -137,6 +139,10 @@ void InputImagePositionHandler::SetCurrentInputPosition(float x, float y)
 {
 	it_CurrentInput->spriteDisplayPosition.x = x;
 	it_CurrentInput->spriteDisplayPosition.y = y;
+	if (it_CurrentInput->type == DPAD_NEUTRAL) {
+		m_DpadPosition = it_CurrentInput->spriteDisplayPosition;
+		p_InputImageHandler->DPAD_POSITION = it_CurrentInput->spriteDisplayPosition;
+	}
 }
 
 using json = nlohmann::json;

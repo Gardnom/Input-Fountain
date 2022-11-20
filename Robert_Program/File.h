@@ -5,12 +5,13 @@
 #include <sstream>
 #include <fstream>
 #include <ostream>
+#include <windows.h>
 
 namespace fs = std::filesystem;
 
 class File {
 public:
-	static std::optional<std::vector<fs::path>> GetAllFilesInDirectoryWithExtension(const std::string& directory, const std::string& extension) {
+	static std::optional<std::vector<fs::path>> GetAllFilesInDirectoryWithExtension(const std::wstring& directory, const std::string& extension) {
 		std::vector<fs::path> result;
 		auto entries = fs::directory_iterator(directory);
 		if (!fs::exists(directory) || !fs::is_directory(directory)) {
@@ -43,5 +44,12 @@ public:
 		fileStream.write(contents.c_str(), contents.size());
 
 		return true;
+	}
+
+	static std::wstring ExePath() {
+		TCHAR buffer[MAX_PATH] = { 0 };
+		GetModuleFileName(NULL, buffer, MAX_PATH);
+		std::wstring::size_type pos = std::wstring(buffer).find_last_of(L"\\/");
+		return std::wstring(buffer).substr(0, pos);
 	}
 };
